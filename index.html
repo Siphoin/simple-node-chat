@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+		body {
+			font-family: Arial;
+		}
+		.message-container {
+			padding: 21px;
+}
+
+.message-item {
+vertical-align: middle;
+}
+
+.clear-messages {
+	margin-top: 25px;
+	outline: none;
+	border: none;
+	color: white;
+	background-color: rgb(224, 2, 2);
+	cursor: pointer;
+	border-radius: 10px;
+}
+
+
+.clear-messages:hover {
+	background-color: rgb(189, 2, 2);
+}
+
+.send-messages {
+	outline: none;
+	border: none;
+	color: white;
+	background-color: rgb(2, 124, 224);
+	cursor: pointer;
+	border-radius: 10px;
+}
+
+.send-messages:hover {
+	background-color: rgb(2, 107, 194);
+}
+
+
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+					var socket = io.connect();
+
+					function ClearAllMessages () {
+	socket.emit("ClearMessages");
+}
+		$(function() {
+			
+			var $form = $("#FormSendMessage");
+			var $textarea = $("#message");
+			var $name = $("#name");
+			var $allMessages = $("#message-container");
+			var $onlineCount = $("#online");
+			
+
+			$form.submit(function(e) {
+			 e.preventDefault();
+			 socket.emit("NewMessage", { msg: $textarea.val(), name: $name.val()});
+			 $textarea.val("");
+			 if ($name.val().trim()) {
+				document.getElementById("name").disabled = true;			 
+			 }
+
+			});
+
+
+			socket.on("AddMessage", function(data) {
+             $allMessages.append("<div class='message-item'><b>" + data.name + ": </b>" + data.msg + "</div>")
+});
+
+socket.on("ClearMessages", function(data) {
+	var myNode = document.getElementById("message-container");
+myNode.innerHTML = '';
+
+});
+
+socket.on("NewConnectionState", function(data) {
+	$("h3").text("В чате онлайн: " + data.count);
+
+});
+		})
+
+
+	</script>
+	<title>Document</title>
+</head>
+<body>
+	<form id="FormSendMessage">
+		<label for="name">Имя</label>
+        <input type="text" placeholder="Введите имя" name="name" id="name">
+		<label for="message">Сообщение</label>
+		<textarea name="message" id="message" placeholder="Введите сообщение"></textarea>
+		<input class="send-messages" type="submit"></input>
+	</form>
+	<input class="clear-messages" type="submit" value="Очистить сообщения" onclick="ClearAllMessages();"></input>
+	<h3 class="online">В чате онлайн: 0</h3>
+	<h1>Сообщения:</h1>
+	<div class="message-container" id="message-container">
+
+	</div>
+</body>
+</html>
